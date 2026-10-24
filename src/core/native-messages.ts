@@ -181,6 +181,27 @@ export function newPlanBlockMessage(
 	};
 }
 
+// ─── send_to_user ────────────────────────────────────────────────────────────
+
+/** The verbatim-message tool (src/agent/tools/send-to-user.ts carries the why). */
+export const SEND_TO_USER_TOOL = "send_to_user";
+
+/** The message of a send_to_user call, or undefined for any other block. */
+export function sentMessageOf(block: unknown): string | undefined {
+	const call = block as { type?: string; name?: string; arguments?: { message?: unknown } };
+	const message = call.type === "toolCall" && call.name === SEND_TO_USER_TOOL ? call.arguments?.message : undefined;
+	return typeof message === "string" ? message : undefined;
+}
+
+/** The user-facing text of a native message, in order: a string body, its text blocks, and its send_to_user messages. */
+export function userFacingTextOf(content: unknown): string[] {
+	if (typeof content === "string") return content.trim() ? [content] : [];
+	if (!Array.isArray(content)) return [];
+	return content
+		.map((c) => ((c as { type?: string }).type === "text" ? (c as { text: string }).text : sentMessageOf(c)))
+		.filter((t): t is string => typeof t === "string" && t.trim().length > 0);
+}
+
 // ─── practice sessions (owner, 2026-10-04) ───────────────────────────────────
 
 /** The practice agent's two tools (the conclude-before-next-problem gate's
