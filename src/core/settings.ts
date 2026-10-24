@@ -356,12 +356,10 @@ export interface CompactionSettings {
 	thresholdTokens?: number;
 }
 
-/** Base-URL overrides keyed by plain-key provider id (absent = pi-ai's
- *  catalog URL); applied by piEngineForSpec in src/agent/models.ts. */
+/** Base-URL overrides keyed by plain-key provider id (absent = pi-ai's catalog URL); applied by piEngineForSpec in src/agent/models.ts. */
 export type ProvidersSettings = Record<string, { baseUrl: string }>;
 
-/** Trimmed http(s) URL, no query/hash, no trailing slash — the one stored
- *  base-URL shape (a model's path suffix appends to it); null = unusable. */
+/** Trimmed http(s) URL, no query/hash, no trailing slash — the one stored base-URL shape (a model's path suffix appends to it); null = unusable. */
 export function normalizeBaseUrl(value: string): string | null {
 	const trimmed = value.trim();
 	let url: URL;

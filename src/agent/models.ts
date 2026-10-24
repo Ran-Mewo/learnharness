@@ -78,8 +78,7 @@ export interface ResolvedModelSpec {
 	baseUrl?: string;
 }
 
-/** The URL prefix all a provider's catalog models share — what a base-URL
- *  override replaces. Some providers split by API (OpenRouter: `/api` and `/api/v1`). */
+/** The URL prefix all a provider's catalog models share — what a base-URL override replaces. Some providers split by API (OpenRouter: `/api` and `/api/v1`). */
 export function providerBaseUrlRoot(provider: string): string | undefined {
 	const urls = piModels().getModels(provider).map((m) => m.baseUrl);
 	if (urls.length === 0) return undefined;

@@ -78,10 +78,7 @@ export function isWritableAuthKey(id: string): boolean {
 	return isKnownAuthKey(id) || isProviderEnvVar(id);
 }
 
-/** The settings page's provider dropdown: every pi-ai provider that takes
- *  a plain key ({id, envVar, label} — no-drift-pinned, see the table's doc
- *  in core/auth-keys.ts and tests/auth-provider-keys.test.ts) plus its
- *  defaultBaseUrl (providerBaseUrlRoot). Sorted by id for a stable payload. */
+/** The settings page's provider dropdown: every pi-ai provider that takes a plain key ({id, envVar, label} — no-drift-pinned, see the table's doc in core/auth-keys.ts and tests/auth-provider-keys.test.ts) plus its defaultBaseUrl (providerBaseUrlRoot). Sorted by id for a stable payload. */
 export function providerKeyList() {
 	return AUTH_PROVIDER_KEYS.map((p) => ({ ...p, defaultBaseUrl: providerBaseUrlRoot(p.id) })).sort((a, b) => a.id.localeCompare(b.id));
 }

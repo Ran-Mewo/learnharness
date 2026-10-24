@@ -377,8 +377,7 @@ export function parseCompactionSettingsBody(body: unknown): SettingsBodyResult<C
 	return { ok: true, settings };
 }
 
-/** providers: { [providerId]: { baseUrl } } — plain-key provider ids only;
- *  a present entry must carry a usable http(s) URL, stored normalized. */
+/** providers: { [providerId]: { baseUrl } } — plain-key provider ids only; a present entry must carry a usable http(s) URL, stored normalized. */
 export function parseProvidersSettingsBody(body: unknown): SettingsBodyResult<ProvidersSettings> {
 	const raw = asRecord(body);
 	if (!raw) return { ok: false, error: "Invalid JSON body" };

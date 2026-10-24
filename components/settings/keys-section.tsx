@@ -10,10 +10,7 @@
  * 33 pi-ai providers).
  *
  * Owner rulings carried in:
- *  - Env-owned rows (a real environment variable owns the name — dev
- *    .env.local or launch env) show no paste field: a paste box on a key
- *    the UI cannot make live would mislead. They still unfold to their
- *    base-URL lines (settings.json, so those CAN go live).
+ *  - Env-owned rows (a real environment variable owns the name — dev .env.local or launch env) show no paste field: a paste box on a key the UI cannot make live would mislead. They still unfold to their base-URL lines (settings.json, so those CAN go live).
  *  - OpenRouter is NOT special: one provider among 33, a row only when
  *    stored, otherwise it lives in the Add dropdown like everyone else.
  *  - Tools & services (Deepgram, the Google pair) keep their own group,
@@ -108,8 +105,7 @@ export function keyStatusLine(status: AuthKeyStatus): string {
 
 export const BASE_URL_INVALID = "Base URL must be an http(s) URL with no query or hash";
 
-/** Compose: one provider's base URL set (null drops it), the rest carried
- *  verbatim. Pure — exported for tests. */
+/** Compose: one provider's base URL set (null drops it), the rest carried verbatim. Pure — exported for tests. */
 export function composeBaseUrl(
 	current: ProvidersSettings | undefined,
 	providerId: string,
@@ -121,9 +117,7 @@ export function composeBaseUrl(
 	return next;
 }
 
-/** One table row: label left, tiny docs link + status right. Writable
- *  rows click-unfold an editor beneath (owner interaction); env-owned
- *  rows unfold only to their base-URL lines, else stay dimmed and read-only. */
+/** One table row: label left, tiny docs link + status right. Writable rows click-unfold an editor beneath (owner interaction); env-owned rows unfold only to their base-URL lines, else stay dimmed and read-only. */
 function KeyTableRow({
 	label,
 	docsUrl,
@@ -278,8 +272,7 @@ function KeyTableRow({
 	);
 }
 
-/** One provider's base-URL line in an unfolded row. The parent keys it on
- *  the saved value, so a landed write re-seeds the field. */
+/** One provider's base-URL line in an unfolded row. The parent keys it on the saved value, so a landed write re-seeds the field. */
 function BaseUrlLine({
 	label,
 	placeholder,
