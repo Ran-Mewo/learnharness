@@ -106,6 +106,8 @@ export function keyStatusLine(status: AuthKeyStatus): string {
 	return `${tail} · ${chars}${status.source === "env" ? " · env" : ""}`;
 }
 
+export const BASE_URL_INVALID = "Base URL must be an http(s) URL with no query or hash";
+
 /** Compose: one provider's base URL set (null drops it), the rest carried
  *  verbatim. Pure — exported for tests. */
 export function composeBaseUrl(
@@ -300,7 +302,7 @@ function BaseUrlLine({
 		if (busy) return;
 		const baseUrl = next === null ? null : normalizeBaseUrl(next);
 		if (next !== null && baseUrl === null) {
-			setError("Base URL must be an http(s) URL with no query or hash");
+			setError(BASE_URL_INVALID);
 			return;
 		}
 		setBusy(true);
@@ -515,7 +517,13 @@ export function KeysSection({
 
 	const { providerRows, toolRows, unknownRows, addable } = classifyKeys(statuses, providers);
 
-	async function saveNewProvider(p: ProviderKeyInfo, value: string) {
+	async function saveNewProvider(p: ProviderKeyInfo, value: string, baseUrlInput: string) {
+		const baseUrl = baseUrlInput.trim() ? normalizeBaseUrl(baseUrlInput) : null;
+		if (baseUrlInput.trim() && !baseUrl) {
+			setAddError(BASE_URL_INVALID);
+			return;
+		}
+		if (baseUrl) await onBaseUrlsChange(composeBaseUrl(baseUrls, p.id, baseUrl));
 		const err = await saveKey(p.envVar, value);
 		if (err) setAddError(err);
 		else {
@@ -569,10 +577,7 @@ export function KeysSection({
 					/>
 				)}
 				{adding && (
-					<div className="flex items-center gap-2 rounded-sm px-1 py-1.5" data-testid={`key-${adding.id}-editor`}>
-						<span className="shrink-0 font-ui text-xs text-foreground">{adding.label}</span>
-						<AddProviderEditor provider={adding} onSave={(v) => void saveNewProvider(adding, v)} onCancel={() => setAdding(null)} error={addError} />
-					</div>
+					<AddProviderEditor provider={adding} onSave={(v, baseUrl) => void saveNewProvider(adding, v, baseUrl)} onCancel={() => setAdding(null)} error={addError} />
 				)}
 			</SettingsGroup>
 
@@ -624,48 +629,69 @@ function AddProviderEditor({
 	error,
 }: {
 	provider: ProviderKeyInfo;
-	onSave: (value: string) => void;
+	onSave: (value: string, baseUrl: string) => void;
 	onCancel: () => void;
 	error: string | null;
 }) {
 	const [value, setValue] = useState("");
+	const [baseUrl, setBaseUrl] = useState("");
 	return (
-		<>
-			<input
-				type="text"
-				value={value}
-				onChange={(e) => setValue(e.target.value)}
-				onKeyDown={(e) => {
-					if (e.key === "Enter" && value.trim()) onSave(value);
-				}}
-				placeholder="Paste key…"
-				aria-label={`${provider.label} key`}
-				data-testid={`key-${provider.id}-input`}
-				autoFocus
-				className="h-7 min-w-0 flex-1 rounded-sm border border-border bg-background px-1.5 font-mono text-xs text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-muted-foreground/50"
-			/>
-			<button
-				type="button"
-				onClick={() => value.trim() && onSave(value)}
-				disabled={!value.trim()}
-				data-testid={`key-${provider.id}-save`}
-				className="shrink-0 text-xs text-foreground underline-offset-2 hover:underline disabled:text-muted-foreground/40 disabled:no-underline"
-			>
-				Save
-			</button>
-			<button
-				type="button"
-				onClick={onCancel}
-				data-testid={`key-${provider.id}-cancel`}
-				className="shrink-0 text-xs text-muted-foreground/70 underline-offset-2 hover:text-foreground hover:underline"
-			>
-				Cancel
-			</button>
+		<div data-testid={`key-${provider.id}-editor`}>
+			<div className="flex items-center gap-2 rounded-sm px-1 py-1.5">
+				<span className="shrink-0 font-ui text-xs text-foreground">{provider.label}</span>
+				<input
+					type="text"
+					value={value}
+					onChange={(e) => setValue(e.target.value)}
+					onKeyDown={(e) => {
+						if (e.key === "Enter" && value.trim()) onSave(value, baseUrl);
+					}}
+					placeholder="Paste key…"
+					aria-label={`${provider.label} key`}
+					data-testid={`key-${provider.id}-input`}
+					autoFocus
+					className="h-7 min-w-0 flex-1 rounded-sm border border-border bg-background px-1.5 font-mono text-xs text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-muted-foreground/50"
+				/>
+				<button
+					type="button"
+					onClick={() => value.trim() && onSave(value, baseUrl)}
+					disabled={!value.trim()}
+					data-testid={`key-${provider.id}-save`}
+					className="shrink-0 text-xs text-foreground underline-offset-2 hover:underline disabled:text-muted-foreground/40 disabled:no-underline"
+				>
+					Save
+				</button>
+				<button
+					type="button"
+					onClick={onCancel}
+					data-testid={`key-${provider.id}-cancel`}
+					className="shrink-0 text-xs text-muted-foreground/70 underline-offset-2 hover:text-foreground hover:underline"
+				>
+					Cancel
+				</button>
+			</div>
+			{provider.defaultBaseUrl && (
+				<div className="flex items-center gap-2 rounded-sm px-1 py-1.5">
+					<span className="shrink-0 font-ui text-xs text-muted-foreground">Base URL (optional)</span>
+					<input
+						type="text"
+						value={baseUrl}
+						onChange={(e) => setBaseUrl(e.target.value)}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" && value.trim()) onSave(value, baseUrl);
+						}}
+						placeholder={provider.defaultBaseUrl}
+						aria-label={`${provider.label} base URL`}
+						data-testid={`key-${provider.id}-base-url`}
+						className="h-7 min-w-0 flex-1 rounded-sm border border-border bg-background px-1.5 font-mono text-xs text-foreground outline-none placeholder:text-muted-foreground/60 focus:border-muted-foreground/50"
+					/>
+				</div>
+			)}
 			{error && (
-				<p role="alert" className="w-full pl-0 text-xs text-red-500" data-testid={`key-${provider.id}-error`}>
+				<p role="alert" className="px-1 text-xs text-red-500" data-testid={`key-${provider.id}-error`}>
 					{error}
 				</p>
 			)}
-		</>
+		</div>
 	);
 }
