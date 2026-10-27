@@ -16,7 +16,7 @@ import {
 } from "./tools.ts";
 import { practiceTools, type PracticeToolContext } from "./tools/practice.ts";
 import { healToolRecord, withArgumentHeal } from "./tools/heal.ts";
-import { SEND_TO_USER_PROMPT, sendToUserTool } from "./tools/send-to-user.ts";
+import { SEND_TO_USER_OPENING, SEND_TO_USER_PROMPT, sendToUserTool } from "./tools/send-to-user.ts";
 import { quizInputObject, quizInputProblems } from "../core/question-core.ts";
 import { QUESTION_TOOLS, type EnabledTools } from "../core/pending.ts";
 import { toLlmMessages, nativeInputCause, PRACTICE_PROBLEM_TOOL } from "../core/native-messages.ts";
@@ -194,7 +194,7 @@ function baseAgentOptions(kind: AgentKind, opts: AgentBuildOptions, tools: Agent
 		identity: APP_IDENTITY,
 		sessionId: opts.chatId,
 		initialState: {
-			systemPrompt: sendsToUser ? `${systemPrompt}\n\n---\n\n${SEND_TO_USER_PROMPT}` : systemPrompt,
+			systemPrompt: sendsToUser ? `${SEND_TO_USER_OPENING}\n\n---\n\n${systemPrompt}\n\n---\n\n${SEND_TO_USER_PROMPT}` : systemPrompt,
 			model: engine.model,
 			thinkingLevel: engine.level,
 			// Conditional registry inclusion, like the graph-tool gates: when

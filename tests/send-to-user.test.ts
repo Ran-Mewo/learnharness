@@ -35,7 +35,7 @@ after(() => {
 	fs.rmSync(scratch, { recursive: true, force: true });
 });
 
-const { SEND_TO_USER_PROMPT, sendToUserTool } = await import("../src/agent/tools/send-to-user.ts");
+const { SEND_TO_USER_OPENING, SEND_TO_USER_PROMPT, sendToUserTool } = await import("../src/agent/tools/send-to-user.ts");
 const { createProberAgent, createTeacherAgent, createPracticeAgent, composeInstructions } = await import("../src/agent/teacher-agent.ts");
 const { SEND_TO_USER_TOOL, activeProblemOf, asAgentMessages, newUserMessage, sendToUserText, toLlmMessages, userFacingTextOf } = await import("../src/core/native-messages.ts");
 const { coverageOf, messageFingerprint, messageViewLines, teacherProseBlocks } = await import("../src/core/coverage.ts");
@@ -103,7 +103,7 @@ describe("send_to_user model gate", () => {
 					assert.equal(typeof output!.prepareArguments, "function", "standard argument healing is wired");
 				}
 				const base = composeInstructions(kind as keyof typeof factories);
-				assert.equal(agent.state.systemPrompt, enabled ? `${base}\n\n---\n\n${SEND_TO_USER_PROMPT}` : base, "the prompt section rides with the tool");
+				assert.equal(agent.state.systemPrompt, enabled ? `${SEND_TO_USER_OPENING}\n\n---\n\n${base}\n\n---\n\n${SEND_TO_USER_PROMPT}` : base, "the prompt sections ride with the tool");
 			}
 		});
 	}
