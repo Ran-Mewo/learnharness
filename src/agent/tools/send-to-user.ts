@@ -4,14 +4,36 @@ import { SEND_TO_USER_TOOL } from "../../core/native-messages.ts";
 import { serverExecute } from "../tool-execute.ts";
 
 const sendToUserInput = Type.Object({
-	message: Type.String({ description: "The content to display to the learner. Markdown and LaTeX render." }),
+	message: Type.String({
+		minLength: 1,
+		pattern: "\\S",
+		description: "The complete content to display to the learner. Markdown and LaTeX are supported.",
+	}),
 });
 
-/** The send_to_user tool — Anthropic's documented fix for verbatim mid-turn content: newer Claude models return text written right before a tool call only as a short summary, but tool input is never summarized. */
+/** Claude's documented verbatim mid-turn output channel. Availability is
+ * model-gated at the shared conversation-agent construction boundary;
+ * the native call remains in history, and the view renders its message. */
 export const sendToUserTool: AgentTool<typeof sendToUserInput> = {
 	name: SEND_TO_USER_TOOL,
 	label: SEND_TO_USER_TOOL,
-	description: "Display a message directly to the learner. Use this for content the learner must see exactly as written before your turn finishes, such as the teaching before a check, a worked example, or a correction.",
+	description:
+		"## REQUIRED OUTPUT CHANNEL — ALWAYS USE `send_to_user`\n\n" +
+		"**ALL learner-facing messages MUST be sent using `send_to_user`.** This includes explanations, teaching, " +
+		"feedback, corrections, hints, introductions, progress messages, and final responses. " +
+		"There is no exception for short messages or the end of a turn.\n\n" +
+		"Ordinary response text may be converted into summarized thinking instead of reaching the learner. " +
+		"**Never rely on ordinary response text to communicate with the learner. Thinking is not delivery.**\n\n" +
+		"Put the complete message in `message`. Markdown and LaTeX are supported. " +
+		"Do not duplicate it in ordinary response text.\n\n" +
+		"Question content still belongs in the appropriate question tool; send any accompanying teaching or " +
+		"commentary through `send_to_user` before calling that tool.\n\n" +
+		"This tool does not pause or end your turn. Continue with other tools when needed. " +
+		"After delivering your final message, end the turn without additional ordinary response text.",
 	parameters: sendToUserInput,
-	execute: serverExecute(SEND_TO_USER_TOOL, sendToUserInput, () => "Shown to the learner."),
+	executionMode: "sequential",
+	execute: serverExecute(SEND_TO_USER_TOOL, sendToUserInput, () => "Message received for display."),
 };
+
+/** The system-prompt section that rides with the tool: the system prompt otherwise tells the model to write prose, which the tool description alone does not reliably override. */
+export const SEND_TO_USER_PROMPT = "## Messages to the learner\n\nSend everything you say to the learner — explanations, worked examples, feedback, corrections, hints, closing words — with `send_to_user`, exactly as the learner should see it. Text you write outside `send_to_user` will not reach the learner at all. Questions still go through the question tools: send their lead-in teaching with `send_to_user` first, then pose the question.";

@@ -22,6 +22,7 @@
 
 import type { LhMessage } from "./native-messages.ts";
 import {
+	failedOutputCallIds,
 	PRACTICE_CONCLUDE_TOOL,
 	PRACTICE_PROBLEM_TOOL,
 	problemInputForConclude,
@@ -40,6 +41,7 @@ export interface MarkdownContext {
 	messages: ReadonlyArray<LhMessage>;
 	/** toolCallId → the call part's name + arguments. */
 	calls: Map<string, { name: string; args: Record<string, unknown> | undefined }>;
+	failedOutputCalls?: ReadonlySet<string>;
 }
 
 function markdownContext(messages: ReadonlyArray<LhMessage>): MarkdownContext {
@@ -58,7 +60,7 @@ function markdownContext(messages: ReadonlyArray<LhMessage>): MarkdownContext {
 			}
 		}
 	}
-	return { messages, calls };
+	return { messages, calls, failedOutputCalls: failedOutputCallIds(messages) };
 }
 
 /** solvedWithHints → "Solved with hints" — the outcome enum reads as prose. */
@@ -168,13 +170,12 @@ export function messageMarkdown(
 			parts.push(`### Learner${anchor}\n\n${text.trim()}`);
 		}
 	} else if (role === "assistant") {
-		for (const text of userFacingTextOf((message as { content: unknown }).content)) {
+		for (const text of userFacingTextOf((message as { content: unknown }).content, ctx?.failedOutputCalls ?? failedOutputCallIds([message]))) {
 			parts.push(`### Teacher${anchor}\n\n${text.trim()}`);
 		}
 	} else if (role === "toolResult") {
 		const result = message as ToolResultMessage;
-		if (result.isError) return null; // retry context, not learning evidence
-		if (result.toolName === SEND_TO_USER_TOOL) return null; // its message already renders as teacher prose
+		if (result.isError || result.toolName === SEND_TO_USER_TOOL) return null; // retry context or output ack, not learning evidence
 		const { heading, body } = toolResultBody(result, ctx);
 		parts.push(`### ${heading}${anchor}\n\n${body.join("\n\n")}`);
 	}
